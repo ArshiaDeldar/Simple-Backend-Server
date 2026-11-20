@@ -1,0 +1,99 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../generated/prisma"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model article_tags {
+  article_id Int
+  tag_id     Int
+  articles   articles @relation(fields: [article_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tags       tags     @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([article_id, tag_id])
+}
+
+model articles {
+  id           Int            @id @default(autoincrement())
+  title        String
+  body         String
+  author_id    Int
+  article_tags article_tags[]
+  blog_users   blog_users     @relation(fields: [author_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model blog_users {
+  id            Int            @id @default(autoincrement())
+  name          String
+  email         String         @unique
+  articles      articles[]
+  user_profiles user_profiles?
+}
+
+model categories {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  description       String?
+  category_products category_products[]
+}
+
+model category_products {
+  id           Int        @id @default(autoincrement())
+  product_name String
+  category_id  Int
+  categories   categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model inventory {
+  id           Int    @id @default(autoincrement())
+  product_name String
+  quantity     Int
+}
+
+model posts {
+  id      Int    @id @default(autoincrement())
+  title   String
+  body    String
+  user_id Int
+  users   users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model products {
+  id    Int     @id @default(autoincrement())
+  name  String
+  price Decimal @db.Decimal
+}
+
+model tags {
+  id           Int            @id @default(autoincrement())
+  name         String         @unique
+  article_tags article_tags[]
+}
+
+model user_profiles {
+  user_id    Int        @id
+  bio        String?
+  website    String?
+  blog_users blog_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id    Int     @id @default(autoincrement())
+  name  String
+  email String  @unique
+  phone String?
+  posts posts[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
