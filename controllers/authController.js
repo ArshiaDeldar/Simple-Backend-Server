@@ -62,3 +62,55 @@ export async function register(req, res) {
     });
   }
 }
+
+export async function login(req, res) {
+  try {
+    const { email, password } = req.body ?? {};
+
+    // 1. Validate input
+    if (
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !email.trim() ||
+      !password
+    ) {
+      return res.status(400).json({
+        message: "Email and password are required",
+      });
+    }
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // 2. Find the user
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+    if (!user) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // 3. Verify password
+    const isPasswordValid = await argon2.verify(user.passwordHash, password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        message: "Invalid email or password",
+      });
+    }
+
+    // 4. Login successful
+    return res.status(200).json({
+      message: "Login successful",
+      user: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
