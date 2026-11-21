@@ -11,6 +11,7 @@ import {
 
 const router = express.Router();
 
+// Authentication and Authorization required
 router.get("/count", getUserCount);
 
 router.get("/", getAllUsers);

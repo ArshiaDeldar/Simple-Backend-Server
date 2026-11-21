@@ -121,11 +121,12 @@ export async function editUserInfo(req, res) {
     where: { id },
     data,
   });
+  return res.status(200).json(updatedUser);
 }
 
 export async function deleteUser(req, res) {
   const id = Number(req.params.id);
-  if (!Number.isInteger || id <= 0) {
+  if (!Number.isInteger(id) || id <= 0) {
     const error = new Error("Invalid user ID");
     error.statusCode = 400;
     throw error;
