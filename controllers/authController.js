@@ -167,3 +167,25 @@ export async function getMe(req, res) {
     });
   }
 }
+
+export function logout(req, res) {
+  req.session.destroy((error) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).json({
+        message: "Could not log out",
+      });
+    }
+
+    res.clearCookie("connect.sid", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    });
+
+    return res.status(200).json({
+      message: "Logged out successfully",
+    });
+  });
+}
