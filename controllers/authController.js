@@ -102,34 +102,66 @@ export async function login(req, res) {
     req.session.regenerate((error) => {
       if (error) {
         console.error(error);
+
         return res.status(500).json({
           message: "Could not create session",
         });
       }
-    });
 
-    // 5. Store the user's ID in the session
-    req.session.userId = user.id;
+      // 5. Store the user's ID in the session
+      req.session.userId = user.id;
 
-    // 6. Save the session before responding
-    req.session.save((error) => {
-      if (error) {
-        console.error(error);
-        return res.status(500).json({
-          message: "Could not save session",
+      // 6. Save the session before responding
+      req.session.save((error) => {
+        if (error) {
+          console.error(error);
+
+          return res.status(500).json({
+            message: "Could not save session",
+          });
+        }
+
+        return res.status(200).json({
+          message: "Login successful",
+          user: {
+            id: user.id,
+            email: user.email,
+            createdAt: user.createdAt,
+          },
         });
-      }
-      return res.status(200).json({
-        message: "Login successful",
-        user: {
-          id: user.id,
-          email: user.email,
-          createdAt: user.createdAt,
-        },
       });
     });
   } catch (error) {
     console.error(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+}
+
+export async function getMe(req, res) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: req.session.userId,
+      },
+      select: {
+        id: true,
+        email: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error(error);
+
     return res.status(500).json({
       message: "Internal Server Error",
     });
