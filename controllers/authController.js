@@ -98,14 +98,35 @@ export async function login(req, res) {
       });
     }
 
-    // 4. Login successful
-    return res.status(200).json({
-      message: "Login successful",
-      user: {
-        id: user.id,
-        email: user.email,
-        createdAt: user.createdAt,
-      },
+    // 4. Regenerate session to prevent session fixation
+    req.session.regenerate((error) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({
+          message: "Could not create session",
+        });
+      }
+    });
+
+    // 5. Store the user's ID in the session
+    req.session.userId = user.id;
+
+    // 6. Save the session before responding
+    req.session.save((error) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({
+          message: "Could not save session",
+        });
+      }
+      return res.status(200).json({
+        message: "Login successful",
+        user: {
+          id: user.id,
+          email: user.email,
+          createdAt: user.createdAt,
+        },
+      });
     });
   } catch (error) {
     console.error(error);

@@ -4,14 +4,37 @@ import requestLogger from "./middleware/requestLogger.js";
 import addRequestTime from "./middleware/addRequestTime.js";
 import errorHandler from "./middleware/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const NODE_ENV = process.env.NODE_ENV || "development";
+const PgSession = connectPgSimple(session);
 app.use(express.json());
 
 app.use(requestLogger);
 app.use(addRequestTime);
+app.use(
+  session({
+    store: new PgSession({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: true,
+    }),
+
+    secret: process.env.SESSION_SECRET,
+
+    resave: false,
+    saveUninitialized: false,
+
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24,
+    },
+  }),
+);
 
 app.use("/users", userRoutes);
 app.use("/auth", authRoutes);
